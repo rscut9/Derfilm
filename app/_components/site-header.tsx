@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const navigationItems = [
   { label: "Inicio", href: "/" },
-  { label: "Categorías" },
+  { label: "Categorías", href: "/categorias" },
   { label: "Actores" },
   { label: "Directores" },
   { label: "Añadir", href: "/anadir" },
