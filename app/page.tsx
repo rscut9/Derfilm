@@ -1,19 +1,21 @@
+import Link from "next/link";
 import { MediaCard } from "./_components/media-card";
 import { SiteHeader } from "./_components/site-header";
-import { getActors, getMovies } from "@/lib/catalog";
+import { getActors, getDirectors, getMovies } from "@/lib/catalog";
 
 export default function Home() {
   const movies = getMovies();
   const actors = getActors();
+  const directors = getDirectors();
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <SiteHeader />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
-        <h1 className="text-2xl font-bold tracking-tight">Muestra de tarjetas</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Inicio</h1>
 
-        <div className="mt-8 grid gap-12 sm:grid-cols-2">
+        <div className="mt-8 grid gap-12 sm:grid-cols-3">
           <section aria-labelledby="peliculas-heading">
             <h2
               id="peliculas-heading"
@@ -42,11 +44,36 @@ export default function Home() {
             </h2>
             <div className="flex flex-wrap gap-6">
               {actors.map((actor) => (
-                <MediaCard
+                <Link
                   key={actor.id}
-                  name={actor.name}
-                  imageSrc={actor.imageSrc}
-                />
+                  href={`/actores/${actor.id}`}
+                  className="block w-full max-w-48 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                >
+                  <MediaCard name={actor.name} imageSrc={actor.imageSrc} />
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section aria-labelledby="directores-heading">
+            <h2
+              id="directores-heading"
+              className="mb-4 text-sm font-semibold uppercase tracking-widest text-zinc-400"
+            >
+              Directores
+            </h2>
+            <div className="flex flex-wrap gap-6">
+              {directors.map((director) => (
+                <Link
+                  key={director.id}
+                  href={`/directores/${director.id}`}
+                  className="block w-full max-w-48 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                >
+                  <MediaCard
+                    name={director.name}
+                    imageSrc={director.imageSrc}
+                  />
+                </Link>
               ))}
             </div>
           </section>
