@@ -64,6 +64,31 @@ export function getDirectors(): CatalogCard[] {
   return getCatalogItems("director");
 }
 
+export function getDirectorById(id: number): CatalogCard | null {
+  const row = database
+    .prepare(
+      `SELECT id, name, image_path AS imageSrc
+       FROM directors
+       WHERE id = ?`,
+    )
+    .get(id);
+
+  return row ? toCatalogCard(row) : null;
+}
+
+export function getMoviesForDirector(directorId: number): CatalogCard[] {
+  return database
+    .prepare(
+      `SELECT movies.id, movies.name, movies.image_path AS imageSrc
+       FROM movies
+       INNER JOIN movie_directors ON movie_directors.movie_id = movies.id
+       WHERE movie_directors.director_id = ?
+       ORDER BY movies.created_at DESC, movies.name ASC`,
+    )
+    .all(directorId)
+    .map(toCatalogCard);
+}
+
 export function getCategories(): CatalogCard[] {
   return getCatalogItems("category");
 }

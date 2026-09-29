@@ -4,7 +4,7 @@ const navigationItems = [
   { label: "Inicio", href: "/" },
   { label: "Categorías", href: "/categorias" },
   { label: "Actores", href: "/actores" },
-  { label: "Directores" },
+  { label: "Directores", href: "/directores" },
   { label: "Añadir", href: "/anadir" },
 ];
 
