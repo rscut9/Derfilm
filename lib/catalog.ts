@@ -12,6 +12,14 @@ type CatalogRow = {
   imageSrc: string;
 };
 
+export type CatalogItemType = "actor" | "director" | "category";
+
+const tableByItemType: Record<CatalogItemType, string> = {
+  actor: "actors",
+  director: "directors",
+  category: "categories",
+};
+
 export function getMovies(): CatalogCard[] {
   return database
     .prepare(
@@ -19,33 +27,137 @@ export function getMovies(): CatalogCard[] {
        FROM movies
        ORDER BY created_at DESC, name ASC`,
     )
-    .all() as CatalogRow[];
+    .all()
+    .map(toCatalogCard);
 }
 
 export function getActors(): CatalogCard[] {
+  return getCatalogItems("actor");
+}
+
+export function getDirectors(): CatalogCard[] {
+  return getCatalogItems("director");
+}
+
+export function getCategories(): CatalogCard[] {
+  return getCatalogItems("category");
+}
+
+function getCatalogItems(itemType: CatalogItemType): CatalogCard[] {
+  const table = tableByItemType[itemType];
+
   return database
     .prepare(
       `SELECT id, name, image_path AS imageSrc
-       FROM actors
-       ORDER BY created_at DESC, name ASC`,
+       FROM ${table}
+       ORDER BY name ASC`,
     )
-    .all() as CatalogRow[];
+    .all()
+    .map(toCatalogCard);
 }
 
-export function actorExists(name: string): boolean {
+function toCatalogCard(row: unknown): CatalogCard {
+  const { id, name, imageSrc } = row as CatalogRow;
+
+  return {
+    id: Number(id),
+    name: String(name),
+    imageSrc: String(imageSrc),
+  };
+}
+
+export function catalogItemExists(
+  itemType: CatalogItemType,
+  name: string,
+): boolean {
+  const table = tableByItemType[itemType];
+
   return Boolean(
-    database.prepare("SELECT id FROM actors WHERE name = ?").get(name),
+    database.prepare(`SELECT id FROM ${table} WHERE name = ?`).get(name),
   );
 }
 
-export function createActor({
+export function createCatalogItem({
+  itemType,
   name,
   imageSrc,
 }: {
+  itemType: CatalogItemType;
   name: string;
   imageSrc: string;
 }) {
+  const table = tableByItemType[itemType];
+
   database
-    .prepare("INSERT INTO actors (name, image_path) VALUES (?, ?)")
+    .prepare(`INSERT INTO ${table} (name, image_path) VALUES (?, ?)`)
     .run(name, imageSrc);
+}
+
+export function movieExists(name: string): boolean {
+  return Boolean(
+    database.prepare("SELECT id FROM movies WHERE name = ?").get(name),
+  );
+}
+
+export function catalogIdsExist(itemType: CatalogItemType, ids: number[]): boolean {
+  if (ids.length === 0) {
+    return true;
+  }
+
+  const table = tableByItemType[itemType];
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = database
+    .prepare(`SELECT id FROM ${table} WHERE id IN (${placeholders})`)
+    .all(...ids) as Array<{ id: number }>;
+
+  return rows.length === new Set(ids).size;
+}
+
+export function createMovie({
+  name,
+  imageSrc,
+  link,
+  actorIds,
+  directorIds,
+  categoryIds,
+}: {
+  name: string;
+  imageSrc: string;
+  link: string | null;
+  actorIds: number[];
+  directorIds: number[];
+  categoryIds: number[];
+}) {
+  database.exec("BEGIN;");
+
+  try {
+    const result = database
+      .prepare("INSERT INTO movies (name, image_path, link) VALUES (?, ?, ?)")
+      .run(name, imageSrc, link);
+    const movieId = Number(result.lastInsertRowid);
+
+    addMovieRelations("movie_actors", "actor_id", movieId, actorIds);
+    addMovieRelations("movie_directors", "director_id", movieId, directorIds);
+    addMovieRelations("movie_categories", "category_id", movieId, categoryIds);
+
+    database.exec("COMMIT;");
+  } catch (error) {
+    database.exec("ROLLBACK;");
+    throw error;
+  }
+}
+
+function addMovieRelations(
+  table: "movie_actors" | "movie_directors" | "movie_categories",
+  relatedColumn: "actor_id" | "director_id" | "category_id",
+  movieId: number,
+  relatedIds: number[],
+) {
+  const statement = database.prepare(
+    `INSERT INTO ${table} (movie_id, ${relatedColumn}) VALUES (?, ?)`,
+  );
+
+  for (const relatedId of relatedIds) {
+    statement.run(movieId, relatedId);
+  }
 }

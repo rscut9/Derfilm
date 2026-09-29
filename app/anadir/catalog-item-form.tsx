@@ -1,18 +1,32 @@
 "use client";
 
 import { useActionState, useState, type FormEvent } from "react";
-import { addActor, type ActorFormState } from "./actions";
+import type { CatalogFormState } from "./actions";
 
-const initialState: ActorFormState = {
+type CatalogItemFormProps = {
+  entity: string;
+  placeholder: string;
+  action: (
+    previousState: CatalogFormState,
+    formData: FormData,
+  ) => Promise<CatalogFormState>;
+};
+
+const initialState: CatalogFormState = {
   status: "idle",
   message: "",
 };
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
-export function ActorForm() {
-  const [state, formAction, pending] = useActionState(addActor, initialState);
+export function CatalogItemForm({
+  entity,
+  placeholder,
+  action,
+}: CatalogItemFormProps) {
+  const [state, formAction, pending] = useActionState(action, initialState);
   const [clientError, setClientError] = useState("");
+  const inputId = entity.toLowerCase();
 
   function validateImageSize(event: FormEvent<HTMLFormElement>) {
     const imageInput = event.currentTarget.elements.namedItem(
@@ -33,14 +47,17 @@ export function ActorForm() {
     <form
       action={formAction}
       onSubmit={validateImageSize}
-      className="mt-8 space-y-6 rounded-2xl border border-white/10 bg-zinc-900 p-6 shadow-xl"
+      className="mt-5 space-y-5 rounded-2xl border border-white/10 bg-zinc-900 p-5 shadow-xl"
     >
       <div>
-        <label htmlFor="name" className="block text-sm font-semibold text-white">
+        <label
+          htmlFor={`${inputId}-name`}
+          className="block text-sm font-semibold text-white"
+        >
           Nombre
         </label>
         <input
-          id="name"
+          id={`${inputId}-name`}
           name="name"
           type="text"
           required
@@ -48,16 +65,19 @@ export function ActorForm() {
           maxLength={100}
           autoComplete="off"
           className="mt-2 w-full rounded-lg border border-white/15 bg-zinc-950 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-          placeholder="Por ejemplo, Jason Statham"
+          placeholder={placeholder}
         />
       </div>
 
       <div>
-        <label htmlFor="image" className="block text-sm font-semibold text-white">
+        <label
+          htmlFor={`${inputId}-image`}
+          className="block text-sm font-semibold text-white"
+        >
           Imagen
         </label>
         <input
-          id="image"
+          id={`${inputId}-image`}
           name="image"
           type="file"
           required
@@ -85,7 +105,7 @@ export function ActorForm() {
         disabled={pending}
         className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? "Guardando…" : "Guardar actor"}
+        {pending ? "Guardando…" : `Guardar ${entity.toLowerCase()}`}
       </button>
     </form>
   );
