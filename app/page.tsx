@@ -1,4 +1,5 @@
 import { MediaCard } from "./_components/media-card";
+import { getActors, getMovies } from "@/lib/catalog";
 
 const navigationItems = [
   "Inicio",
@@ -9,6 +10,9 @@ const navigationItems = [
 ];
 
 export default function Home() {
+  const movies = getMovies();
+  const actors = getActors();
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <header className="w-full border-b border-white/10 bg-black px-6 py-4">
@@ -39,10 +43,16 @@ export default function Home() {
             >
               Películas
             </h2>
-            <MediaCard
-              name="Transporter"
-              imageSrc="/uploads/transporter.jpg"
-            />
+            <div className="flex flex-wrap gap-6">
+              {movies.map((movie, index) => (
+                <MediaCard
+                  key={movie.id}
+                  name={movie.name}
+                  imageSrc={movie.imageSrc}
+                  eager={index === 0}
+                />
+              ))}
+            </div>
           </section>
 
           <section aria-labelledby="actores-heading">
@@ -52,10 +62,15 @@ export default function Home() {
             >
               Actores
             </h2>
-            <MediaCard
-              name="Jason Statham"
-              imageSrc="/uploads/jason-statham.webp"
-            />
+            <div className="flex flex-wrap gap-6">
+              {actors.map((actor) => (
+                <MediaCard
+                  key={actor.id}
+                  name={actor.name}
+                  imageSrc={actor.imageSrc}
+                />
+              ))}
+            </div>
           </section>
         </div>
       </main>
