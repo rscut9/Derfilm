@@ -8,8 +8,18 @@ function createDatabase() {
   mkdirSync(dirname(databasePath), { recursive: true });
 
   const database = new DatabaseSync(databasePath);
-  database.exec("PRAGMA foreign_keys = ON;");
-  database.exec(`
+  database.exec("PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;");
+
+  const hasSchema = Boolean(
+    database
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'movies'",
+      )
+      .get(),
+  );
+
+  if (!hasSchema) {
+    database.exec(`
     CREATE TABLE IF NOT EXISTS movies (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -59,7 +69,8 @@ function createDatabase() {
     );
   `);
 
-  seedExampleData(database);
+    seedExampleData(database);
+  }
 
   return database;
 }

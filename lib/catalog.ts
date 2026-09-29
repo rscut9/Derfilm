@@ -31,3 +31,21 @@ export function getActors(): CatalogCard[] {
     )
     .all() as CatalogRow[];
 }
+
+export function actorExists(name: string): boolean {
+  return Boolean(
+    database.prepare("SELECT id FROM actors WHERE name = ?").get(name),
+  );
+}
+
+export function createActor({
+  name,
+  imageSrc,
+}: {
+  name: string;
+  imageSrc: string;
+}) {
+  database
+    .prepare("INSERT INTO actors (name, image_path) VALUES (?, ?)")
+    .run(name, imageSrc);
+}
