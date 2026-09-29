@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MediaCard } from "@/app/_components/media-card";
 import { SiteHeader } from "@/app/_components/site-header";
 import { getCategories } from "@/lib/catalog";
@@ -25,12 +26,17 @@ export default function CategoriesPage() {
         ) : (
           <div className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {categories.map((category, index) => (
-              <MediaCard
+              <Link
                 key={category.id}
-                name={category.name}
-                imageSrc={category.imageSrc}
-                eager={index < 2}
-              />
+                href={`/categorias/${category.id}`}
+                className="block w-full max-w-48 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+              >
+                <MediaCard
+                  name={category.name}
+                  imageSrc={category.imageSrc}
+                  eager={index < 2}
+                />
+              </Link>
             ))}
           </div>
         )}

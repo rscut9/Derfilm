@@ -93,6 +93,31 @@ export function getCategories(): CatalogCard[] {
   return getCatalogItems("category");
 }
 
+export function getCategoryById(id: number): CatalogCard | null {
+  const row = database
+    .prepare(
+      `SELECT id, name, image_path AS imageSrc
+       FROM categories
+       WHERE id = ?`,
+    )
+    .get(id);
+
+  return row ? toCatalogCard(row) : null;
+}
+
+export function getMoviesForCategory(categoryId: number): CatalogCard[] {
+  return database
+    .prepare(
+      `SELECT movies.id, movies.name, movies.image_path AS imageSrc
+       FROM movies
+       INNER JOIN movie_categories ON movie_categories.movie_id = movies.id
+       WHERE movie_categories.category_id = ?
+       ORDER BY movies.created_at DESC, movies.name ASC`,
+    )
+    .all(categoryId)
+    .map(toCatalogCard);
+}
+
 function getCatalogItems(itemType: CatalogItemType): CatalogCard[] {
   const table = tableByItemType[itemType];
 
